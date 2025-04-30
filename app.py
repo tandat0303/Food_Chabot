@@ -9,7 +9,7 @@ import os
 
 # Cấu hình ứng dụng
 app = Flask(__name__)
-CORS(app, resources={r"/api/*": {"origins": "https://food-chatbot.onrender.com"}})
+CORS(app, resources={r"/api/*": {"origins": "food-chatbot.vercel.app"}})
 
 # Cấu hình logging
 logging.basicConfig(
