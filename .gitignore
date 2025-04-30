@@ -1,0 +1,8 @@
+models/bert_model/
+models/bert_model.zip
+models/fasttext_model.bin
+models/fasttext_model.bin.wv.vectors_ngrams.npy
+data/recipes.json
+*.pyc
+__pycache__/
+.env

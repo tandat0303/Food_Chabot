@@ -1,0 +1,1 @@
+web: python download_models.py && gunicorn app:app

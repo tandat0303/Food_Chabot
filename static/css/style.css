@@ -1,0 +1,200 @@
+/* Tổng quan */
+body {
+    background-color: #f4f4f4;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+}
+
+/* Container chính */
+.container-fluid {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1.25rem; /* 20px */
+    background: white;
+    border-radius: 0.625rem; /* 10px */
+    box-shadow: 0 0.25rem 0.375rem rgba(0, 0, 0, 0.1);
+}
+
+/* Thanh tìm kiếm và input */
+.input-group {
+    margin-bottom: 1.25rem; /* 20px */
+}
+
+#user-input {
+    border-radius: 0.375rem 0 0 0.375rem; /* Bo góc trái */
+}
+
+.btn-primary {
+    border-radius: 0 0.375rem 0.375rem 0; /* Bo góc phải */
+}
+
+/* Danh sách và lịch sử */
+.list-group {
+    max-height: 25rem; /* 400px */
+    overflow-y: auto;
+}
+
+.list-group-item {
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.list-group-item:hover {
+    background: #dfe6e9;
+    transform: scale(1.02);
+}
+
+/* Chi tiết món ăn */
+.card {
+    background: #fff;
+    border-radius: 0.625rem; /* 10px */
+    box-shadow: 0 0.25rem 0.375rem rgba(0, 0, 0, 0.1);
+    padding: 0.9375rem; /* 15px */
+    margin-bottom: 1rem;
+}
+
+.card ul {
+    list-style: none;
+    padding: 0;
+}
+
+.card li {
+    background: #f8f9fa;
+    margin: 0.3125rem 0; /* 5px */
+    padding: 0.625rem; /* 10px */
+    border-radius: 0.3125rem; /* 5px */
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1);
+}
+
+/* Đánh giá và bộ lọc */
+#rating-select, #diet-select {
+    border: 0.125rem solid; /* 2px */
+    font-weight: bold;
+    transition: border-color 0.3s ease;
+}
+
+#rating-select {
+    border-color: #f39c12;
+    color: #e67e22;
+}
+
+#diet-select {
+    border-color: #2ecc71;
+    color: #27ae60;
+}
+
+#rating-select:focus, #diet-select:focus {
+    outline: none;
+    border-color: darken(#f39c12, 10%) !important;
+    box-shadow: 0 0 0 0.2rem rgba(243, 156, 18, 0.25);
+}
+
+/* Nút thực đơn */
+.btn-warning {
+    background-color: #f39c12;
+    border-color: #e67e22;
+    font-weight: bold;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.btn-warning:hover {
+    background-color: #e67e22;
+    border-color: #d35400;
+}
+
+.spinner-border {
+    width: 2rem;
+    height: 2rem;
+}
+
+/* Lịch sử tìm kiếm */
+#search-history .list-group-item {
+    background: #f0f0f0;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+
+#search-history .list-group-item:hover {
+    background: #dcdde1;
+    transform: scale(1.02);
+}
+
+/* Style cho overlay loading */
+#loading-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1050;
+    justify-content: center;
+    align-items: center;
+}
+
+#loading-content {
+    color: white;
+    text-align: center;
+}
+
+/* Style cho công thức tốt nhất */
+#best-recipe-container {
+    margin-bottom: 1.5rem;
+}
+
+#best-recipe .list-group-item {
+    background-color: #e6f4ea;
+    border: 2px solid #28a745;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#best-recipe .list-group-item:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+#best-recipe h5 {
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+
+/* Style cho thực đơn gợi ý */
+#suggested-meal-plan .list-group-item {
+    cursor: pointer;
+    background-color: #f8f9fa;
+    border-left: 4px solid #007bff;
+    margin-bottom: 0.5rem;
+}
+
+#suggested-meal-plan .list-group-item:hover {
+    background-color: #e9ecef;
+}
+
+#suggested-meal-plan h5 {
+    margin-bottom: 1rem;
+    font-weight: bold;
+    color: #007bff;
+}
+
+#suggested-meal-plan p {
+    margin-bottom: 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .container-fluid {
+        padding: 1rem;
+    }
+
+    .col-md-4, .col-md-8 {
+        flex: 100%;
+        max-width: 100%;
+    }
+
+    .list-group, #search-history {
+        max-height: 15rem; /* Giảm chiều cao trên mobile */
+    }
+}

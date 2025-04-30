@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Chatbot hỗ trợ tìm kiếm và gợi ý món ăn">
+    <title>Chatbot Nấu Ăn</title>
+    <link type="image/png" sizes="16x16" rel="icon" href="{{ url_for('static', filename='img/icons8-vegetarian-food-16.png') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Overlay loading -->
+    <div id="loading-overlay">
+        <div id="loading-content">
+            <div class="spinner-border text-light" role="status">
+                <span class="visually-hidden">Đang tải...</span>
+            </div>
+            <p class="mt-2">⏳ Đang tìm món ăn...</p>
+        </div>
+    </div>
+
+    <div class="container-fluid py-4">
+        <h1 class="text-center mb-4">Chatbot Nấu Ăn 🍽️</h1>
+
+        <div class="row g-3">
+            <!-- Bộ lọc chế độ ăn -->
+            <div class="col-md-4">
+                <label for="diet-select" class="form-label">Chọn chế độ ăn:</label>
+                <select id="diet-select" class="form-select" onchange="searchRecipes()">
+                    <option value="all">Tất cả</option>
+                    <option value="vegetarian">Ăn chay</option>
+                    <option value="keto">Keto</option>
+                    <option value="gluten_free">Không gluten</option>
+                </select>
+            </div>
+
+            <!-- Ô tìm kiếm -->
+            <div class="col-md-8">
+                <div class="input-group">
+                    <input type="text" id="user-input" class="form-control" placeholder="Nhập nguyên liệu...">
+                    <button class="btn btn-primary" onclick="searchRecipes()">🔍 Tìm món</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <!-- Công thức tốt nhất (ẩn mặc định) -->
+            <div id="best-recipe-container" style="display: none;">
+                <h3 class="mb-3">🏆 Công thức tốt nhất</h3>
+                <div id="best-recipe" class="card p-3"></div>
+            </div>
+
+            <div class="row mt-4">
+                <!-- Danh sách món ăn -->
+                <div class="col-md-4">
+                    <h3 class="mb-3">📋 Danh sách món ăn</h3>
+                    <ul id="recipe-list" class="list-group"></ul>
+                </div>
+
+                <!-- Chi tiết và thực đơn -->
+                <div class="col-md-8">
+                    <h3 class="mb-3">🍛 Chi tiết món ăn</h3>
+                    <div id="recipe-detail" class="card p-3 mb-4">Chưa có món nào được chọn.</div>
+
+                    <h4 class="mb-3">📌 Thực đơn gợi ý</h4>
+                    <div id="suggested-meal-plan" class="card p-3 mb-3">
+                        <p class="text-muted">Nhấn tìm kiếm để nhận gợi ý thực đơn.</p>
+                    </div>
+                    <button class="btn btn-success mb-3" onclick="addSuggestedMealPlan()">📋 Thêm thực đơn gợi ý</button>
+
+                    <h4 class="mb-3">📌 Thực đơn của bạn</h4>
+                    <ul id="meal-plan-list" class="list-group mb-3"></ul>
+                    <button class="btn btn-danger" onclick="clearMealPlan()">❌ Xóa tất cả</button>
+                </div>
+            </div>
+
+            <!-- Lịch sử tìm kiếm -->
+            <div class="mt-5">
+                <h3 class="mb-3">📜 Lịch sử tìm kiếm</h3>
+                <ul id="search-history" class="list-group"></ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal cho thông báo -->
+    <div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="notificationModalLabel">Thông báo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="modalBody">
+                    <!-- Nội dung -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
