@@ -5,20 +5,20 @@ const STORAGE_KEYS = {
     RATINGS: "recipe_ratings"
 };
 
-// Cấu hình API
-const API_CONFIG = {
-    BASE_URL: window.location.hostname === "localhost" ? "http://127.0.0.1:5000" : "https://food-chatbot.onrender.com",
-    TIMEOUT: 30000, // 30 giây
-    MAX_RETRIES: 3,
-    RETRY_DELAY: 1000 // 1 giây
-};
-
 // Khởi tạo biến toàn cục
 let storedRecipes = [];
 let selectedRecipe = null;
-let suggestedMealPlan = null;
+let suggestedMealPlan = null; // Ensure global declaration
 let ratings = JSON.parse(localStorage.getItem(STORAGE_KEYS.RATINGS)) || {};
 let DOM_ELEMENTS = {};
+
+// Cấu hình API
+const API_CONFIG = {
+    BASE_URL: "", // Sử dụng URL tương đối vì backend và frontend cùng domain
+    TIMEOUT: 30000,
+    MAX_RETRIES: 3,
+    RETRY_DELAY: 1000
+};
 
 // Cấu hình cache
 const CACHE_CONFIG = {
@@ -172,28 +172,20 @@ function normalizeNutrients(nutrients) {
     };
 }
 
-// Hàm fetch với retry
+// Hàm gửi yêu cầu với retry
 async function fetchWithRetry(url, options, retries = API_CONFIG.MAX_RETRIES) {
-    for (let attempt = 1; attempt <= retries; attempt++) {
+    for (let i = 0; i < retries; i++) {
         try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
-
-            const response = await fetch(url, { ...options, signal: controller.signal });
-            clearTimeout(timeoutId);
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-            }
-
+            const response = await fetch(url, {
+                ...options,
+                signal: AbortSignal.timeout(API_CONFIG.TIMEOUT)
+            });
+            if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
             return await response.json();
         } catch (error) {
-            if (attempt === retries || error.name === "AbortError") {
-                throw error;
-            }
-            console.warn(`Retry ${attempt}/${retries} for ${url}: ${error.message}`);
-            await new Promise(resolve => setTimeout(resolve, API_CONFIG.RETRY_DELAY * attempt));
+            if (i === retries - 1) throw error;
+            console.warn(`Retrying (${i + 1}/${retries})...`);
+            await new Promise(resolve => setTimeout(resolve, API_CONFIG.RETRY_DELAY));
         }
     }
 }
@@ -215,7 +207,7 @@ async function searchRecipes() {
         if (DOM_ELEMENTS.suggestedMealPlan) {
             DOM_ELEMENTS.suggestedMealPlan.innerHTML = `<p class="text-muted">Nhấn tìm kiếm để nhận gợi ý thực đơn.</p>`;
         }
-        suggestedMealPlan = null;
+        suggestedMealPlan = null; // Reset suggestedMealPlan
         updateAddMealPlanButtonState();
         return;
     }
@@ -238,24 +230,24 @@ async function searchRecipes() {
 
     showLoading(true);
     try {
-        const data = await fetchWithRetry(`${API_CONFIG.BASE_URL}/search`, {
+        const response = await fetchWithRetry("/search", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ ingredients: query, user_id: userId, diet: diet })
         });
 
-        console.log("Response data:", data);
+        console.log("Response data:", response);
         showLoading(false);
 
-        if (data.error) {
-            console.error("Server returned error:", data.error);
-            return showError(data.error);
+        if (response.error) {
+            console.error("Server returned error:", response.error);
+            return showError(response.error);
         }
-        if (!Array.isArray(data) || data.length === 0) return showError("No recipes found");
+        if (!Array.isArray(response) || response.length === 0) return showError("No recipes found");
 
-        await setCache(cacheKey, data);
+        await setCache(cacheKey, response);
         trimOldCache();
-        renderRecipeList(data);
+        renderRecipeList(response);
     } catch (error) {
         console.error("Fetch API error:", error);
         showError(error.message || "Error loading data from server");
@@ -275,7 +267,7 @@ async function suggestMealPlan() {
         if (DOM_ELEMENTS.suggestedMealPlan) {
             DOM_ELEMENTS.suggestedMealPlan.innerHTML = `<p class="text-muted">Nhấn tìm kiếm để nhận gợi ý thực đơn.</p>`;
         }
-        suggestedMealPlan = null;
+        suggestedMealPlan = null; // Reset suggestedMealPlan
         updateAddMealPlanButtonState();
         return;
     }
@@ -298,23 +290,23 @@ async function suggestMealPlan() {
 
     showLoading(true);
     try {
-        const data = await fetchWithRetry(`${API_CONFIG.BASE_URL}/meal_plan`, {
+        const response = await fetchWithRetry("/meal_plan", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ ingredients: query, user_id: userId, diet: diet })
         });
 
-        console.log("Meal plan data:", data);
+        console.log("Meal plan data:", response);
         showLoading(false);
 
-        if (data.error) {
-            console.error("Server returned error:", data.error);
-            return showError(data.error);
+        if (response.error) {
+            console.error("Server returned error:", response.error);
+            return showError(response.error);
         }
 
-        await setCache(cacheKey, data);
+        await setCache(cacheKey, response);
         trimOldCache();
-        renderMealPlan(data);
+        renderMealPlan(response);
     } catch (error) {
         console.error("Fetch API error:", error);
         showError(error.message || "Error loading meal plan from server");
@@ -324,13 +316,13 @@ async function suggestMealPlan() {
 }
 
 function renderMealPlan(data) {
-    suggestedMealPlan = data;
+    suggestedMealPlan = data; // Set global variable
     const mealPlanDiv = DOM_ELEMENTS.suggestedMealPlan;
 
     if (mealPlanDiv) {
         if (!data || (!data.appetizer && !data.main && !data.dessert)) {
             mealPlanDiv.innerHTML = `<p class="text-danger">Không tìm thấy thực đơn phù hợp.</p>`;
-            suggestedMealPlan = null;
+            suggestedMealPlan = null; // Reset if no valid meal plan
             updateAddMealPlanButtonState();
             return;
         }
@@ -420,7 +412,7 @@ function showError(message) {
     }
     if (DOM_ELEMENTS.suggestedMealPlan) {
         DOM_ELEMENTS.suggestedMealPlan.innerHTML = `<p class="text-danger">❌ ${message}</p>`;
-        suggestedMealPlan = null;
+        suggestedMealPlan = null; // Reset suggestedMealPlan on error
         updateAddMealPlanButtonState();
     }
     showModal(message, "error");
@@ -436,7 +428,7 @@ function renderRecipeList(data) {
         if (data.length === 0) {
             bestRecipeContainer.style.display = "none";
             recipeList.innerHTML = `<li class="list-group-item text-muted">Không tìm thấy món ăn nào.</li>`;
-            suggestedMealPlan = null;
+            suggestedMealPlan = null; // Reset suggestedMealPlan
             updateAddMealPlanButtonState();
             return;
         }
@@ -535,7 +527,7 @@ function showRecipeDetail(element) {
                 <p><strong>Tổng điểm DQI-I: ${dqiScore.total.toFixed(2)}/100</strong></p>
                 <h5>⭐ Đánh giá người dùng:</h5>
                 <p>${avgRating}</p>
-                <select id="rating-select" class="form-control" onchange="rateRecipe('${recipe.id || "no-id"}', this.value, '${recipe.name || "Không có tên"}')">
+                <select id="rating-select" class="form-control" onchange="rateRecipe('${recipe.id || "no-id"}', this.value)">
                     <option value="">Chọn đánh giá</option>
                     <option value="1">⭐ 1 Sao</option>
                     <option value="2">⭐⭐ 2 Sao</option>
@@ -556,34 +548,37 @@ function showRecipeDetail(element) {
 }
 
 // ⭐ Đánh giá
-async function rateRecipe(recipeId, rating, recipeName) {
+async function rateRecipe(recipeId, rating) {
     if (!rating) return;
 
     const userId = localStorage.getItem(STORAGE_KEYS.USER_ID) || generateUserId();
-
-    // Lưu đánh giá cục bộ
-    ratings[recipeId] = ratings[recipeId] || [];
-    ratings[recipeId].push(parseInt(rating));
-    localStorage.setItem(STORAGE_KEYS.RATINGS, JSON.stringify(ratings));
-
-    // Gửi đánh giá đến backend
     try {
-        const response = await fetchWithRetry(`${API_CONFIG.BASE_URL}/feedback`, {
+        const response = await fetchWithRetry("/feedback", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ user_id: userId, recipe_name: recipeName, rating: parseInt(rating) })
+            body: JSON.stringify({ user_id: userId, recipe_name: storedRecipes.find(r => r.id === recipeId)?.name || "Unknown", rating: parseInt(rating) })
         });
 
         console.log("Feedback response:", response);
-        showModal(`Bạn đã đánh giá món ăn ${rating} sao!`, "success");
-    } catch (error) {
-        console.error("Error sending feedback:", error);
-        showModal(`Lỗi khi gửi đánh giá: ${error.message}`, "error");
-    }
+        if (response.error) {
+            console.error("Server returned error:", response.error);
+            showModal("Lỗi khi gửi đánh giá: " + response.error, "error");
+            return;
+        }
 
-    // Cập nhật UI
-    const avgRating = ratings[recipeId].reduce((a, b) => a + b, 0) / ratings[recipeId].length;
-    updateRatingUI(recipeId, avgRating);
+        ratings[recipeId] = ratings[recipeId] || [];
+        ratings[recipeId].push(parseInt(rating));
+        localStorage.setItem(STORAGE_KEYS.RATINGS, JSON.stringify(ratings));
+
+        const avgRating = ratings[recipeId].reduce((a, b) => a + b, 0) / ratings[recipeId].length;
+        updateRatingUI(recipeId, avgRating);
+
+        showModal(`Bạn đã đánh giá món ăn ${rating} sao!`, "success");
+        console.log(`⭐ Đánh giá: ${recipeId} = ${rating}`);
+    } catch (error) {
+        console.error("Feedback error:", error);
+        showModal("Lỗi khi gửi đánh giá: " + error.message, "error");
+    }
 }
 
 function updateRatingUI(recipeId, avgRating) {
@@ -594,7 +589,7 @@ function updateRatingUI(recipeId, avgRating) {
 
     const bestRecipeItem = DOM_ELEMENTS.bestRecipe?.querySelector(`div[data-recipe-id="${recipeId}"]`);
     if (bestRecipeItem) {
-        bestRecipeItem.querySelector(".float-end").textContent = `⭐ ${avgRating.toFixed(1)}/5`;
+        bestRecipeItem.querySelector(".float-end").textContent = `⭐ ${avgRating.toFixed(1)}/5`);
     }
 
     const mealPlanItems = DOM_ELEMENTS.suggestedMealPlan?.querySelectorAll(`li[data-recipe-id="${recipeId}"]`);
@@ -726,6 +721,6 @@ window.onload = () => {
     } else {
         updateSearchHistoryUI();
         updateMealPlanUI();
-        updateAddMealPlanButtonState();
+        updateAddMealPlanButtonState(); // Initialize button state
     }
 };

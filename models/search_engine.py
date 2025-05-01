@@ -14,51 +14,38 @@ import random
 import logging
 import sys
 import traceback
-import os
 
 logger = logging.getLogger(__name__)
 
-# Cấu hình logging
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler('search_engine.log', encoding='utf-8')  # Ghi log vào tệp
+        logging.StreamHandler()
+        # logging.FileHandler('search_engine.log', encoding='utf-8')
     ]
 )
 
-# Đảm bảo console hỗ trợ UTF-8
 if sys.stdout.encoding != 'utf-8':
     import io
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 logger.debug("Starting initialization of search_engine.py")
 
-# Cấu hình hằng số từ biến môi trường
+# Cấu hình hằng số
 CONFIG = {
-    "DATA_PATH": os.getenv("DATA_PATH", "data/recipes.json"),
-    "FASTTEXT_PATH": os.getenv("FASTTEXT_PATH", "models/fasttext_model.bin"),
-    "BERT_PATH": os.getenv("BERT_PATH", "models/bert_model"),
-    "SIMILARITY_THRESHOLD": float(os.getenv("SIMILARITY_THRESHOLD", 0.1)),
-    "VECTOR_SIZE": int(os.getenv("VECTOR_SIZE", 100)),
-    "DQN_LEARNING_RATE": float(os.getenv("DQN_LEARNING_RATE", 0.001)),
-    "DQN_GAMMA": float(os.getenv("DQN_GAMMA", 0.9)),
-    "DQN_EPSILON": float(os.getenv("DQN_EPSILON", 0.1)),
-    "DQN_MEMORY_SIZE": int(os.getenv("DQN_MEMORY_SIZE", 1000)),
-    "DQN_BATCH_SIZE": int(os.getenv("DQN_BATCH_SIZE", 32)),
-    "DQN_UPDATE_FREQ": int(os.getenv("DQN_UPDATE_FREQ", 10))
+    "DATA_PATH": "data/recipes.json",
+    "FASTTEXT_PATH": "models/fasttext_model.bin",
+    "BERT_PATH": "models/bert_model",
+    "SIMILARITY_THRESHOLD": 0.1,
+    "VECTOR_SIZE": 100,
+    "DQN_LEARNING_RATE": 0.001,
+    "DQN_GAMMA": 0.9,
+    "DQN_EPSILON": 0.1,
+    "DQN_MEMORY_SIZE": 1000,
+    "DQN_BATCH_SIZE": 32,
+    "DQN_UPDATE_FREQ": 10
 }
-
-if not os.path.exists(CONFIG["DATA_PATH"]):
-    logger.error(f"File not found: {CONFIG['DATA_PATH']}")
-    raise FileNotFoundError(f"File not found: {CONFIG['DATA_PATH']}")
-if not os.path.exists(CONFIG["FASTTEXT_PATH"]):
-    logger.error(f"File not found: {CONFIG['FASTTEXT_PATH']}")
-    raise FileNotFoundError(f"File not found: {CONFIG['FASTTEXT_PATH']}")
-if not os.path.exists(CONFIG["BERT_PATH"]):
-    logger.error(f"Directory not found: {CONFIG['BERT_PATH']}")
-    raise FileNotFoundError(f"Directory not found: {CONFIG['BERT_PATH']}")
 
 # Load dữ liệu món ăn
 logger.debug(f"Loading recipes from {CONFIG['DATA_PATH']}")
@@ -432,7 +419,7 @@ def categorize_recipe(recipe: Dict) -> str:
         total_time = dqn_agent.parse_time(recipe.get("times", {}).get("Preparation", "0 mins")) + \
                      dqn_agent.parse_time(recipe.get("times", {}).get("Cooking", "0 mins"))
 
-        # 从 khóa phân loại
+        # Từ khóa phân loại
         appetizer_keywords = ["salad", "soup", "starter", "appetizer", "dip"]
         dessert_keywords = ["cake", "cookie", "ice cream", "dessert", "pudding", "custard"]
         main_keywords = ["chicken", "beef", "pork", "fish", "pasta", "rice", "curry"]
@@ -582,8 +569,7 @@ def search_recipes_by_ingredient(user_id: str, ingredient: str = "", diet: str =
         # Tạo result_recipes
         result_recipes = [item[0] for item in matched_recipes]
 
-        # Sử dụng DQN để chọn công thức禁止
-
+        # Sử dụng DQN để chọn công thức tốt nhất
         if result_recipes and query:
             logger.debug("Starting DQN selection")
             best_action = -1
