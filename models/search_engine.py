@@ -60,7 +60,7 @@ except (FileNotFoundError, json.JSONDecodeError) as e:
 # Load mô hình FastText
 logger.debug(f"Loading FastText from {CONFIG['FASTTEXT_PATH']}")
 try:
-    fasttext_model = FastText.load(CONFIG["FASTTEXT_PATH"])
+    fasttext_model = FastText.load(CONFIG["FASTTEXT_PATH"], mmap= 'r')
     logger.info(f"Loaded FastText model, vocabulary size: {len(fasttext_model.wv.index_to_key)}")
 except Exception as e:
     logger.error(f"Failed to load FastText model: {str(e)}", exc_info=True)
